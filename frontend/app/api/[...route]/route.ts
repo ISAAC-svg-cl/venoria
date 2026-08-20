@@ -27,7 +27,7 @@ const store = {
     { id: 1, title: "Contrat de Mise à Disposition - Mariage Martin", contract_number: "CTR-2026-001", status: "signed", created_at: new Date().toISOString() },
   ],
   employees: [
-    { id: "e1-uuid", name: "Clara Renard", email: "clara.renard@venoria.fr", phone: "06 98 76 54 32", role: "ADMIN", status: "active" },
+    { id: "e1-uuid", name: "Administrateur", email: "admin@venoria.fr", phone: "06 98 76 54 32", role: "Administrateur", status: "active" },
     { id: "e2-uuid", name: "Léa Bernard", email: "lea.bernard@venoria.fr", phone: "06 11 22 33 44", role: "MANAGER", status: "active" },
   ],
   notifications: [
@@ -108,8 +108,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       id: "usr-admin-venoria",
       organizationId: "org-venoria-001",
       email,
-      name: email.startsWith("admin") ? "Clara Renard" : email.split("@")[0],
-      role: "OWNER",
+      name: "Administrateur",
+      role: "Administrateur",
     };
 
     const token = await new SignJWT(user)

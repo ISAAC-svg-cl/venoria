@@ -26,7 +26,7 @@ interface SidebarProps {
   userRole?: string;
 }
 
-export function Sidebar({ open, close, logout, active, select, userName = "Clara Renard", userRole = "Administratrice" }: SidebarProps) {
+export function Sidebar({ open, close, logout, active, select, userName = "Administrateur", userRole = "Administrateur" }: SidebarProps) {
   const initials = userName
     .split(" ")
     .map((w) => w[0])

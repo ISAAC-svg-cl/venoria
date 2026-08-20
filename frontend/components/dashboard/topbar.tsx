@@ -23,8 +23,8 @@ export function Topbar({
   dark,
   onToggleDark,
   onNotify,
-  userName = "Clara Renard",
-  userRole = "Administratrice",
+  userName = "Administrateur",
+  userRole = "Administrateur",
 }: TopbarProps) {
   const initials = userName
     .split(" ")
