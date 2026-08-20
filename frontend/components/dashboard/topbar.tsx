@@ -47,15 +47,15 @@ export function Topbar({
         <kbd>⌘ K</kbd>
       </div>
       <div className="topbar-actions">
-        <button className="icon-button" onClick={onToggleLanguage}>
+        <button className="icon-button topbar-extra" onClick={onToggleLanguage}>
           <Globe2 size={18} />
           <span>{language}</span>
           <ChevronDown size={14} />
         </button>
-        <button className="icon-button" onClick={() => onNotify("Messagerie en temps réel synchronisée.")}>
+        <button className="icon-button topbar-extra" onClick={() => onNotify("Messagerie en temps réel synchronisée.")}>
           <MessageSquare size={19} />
         </button>
-        <button className="icon-button" onClick={() => onSelectSection("Notifications")}>
+        <button className="icon-button topbar-extra" onClick={() => onSelectSection("Notifications")}>
           <Bell size={19} />
         </button>
         <button className="icon-button" onClick={onToggleDark} aria-label="Changer le thème">
@@ -63,11 +63,11 @@ export function Topbar({
         </button>
         <button className="top-profile" onClick={() => onSelectSection("Paramètres")}>
           <div className="avatar">{initials}</div>
-          <div>
+          <div className="profile-text">
             <strong>{userName}</strong>
             <span>{userRole}</span>
           </div>
-          <ChevronDown size={15} />
+          <ChevronDown size={15} className="profile-chevron" />
         </button>
       </div>
     </header>
