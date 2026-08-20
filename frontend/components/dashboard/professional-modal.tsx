@@ -12,7 +12,7 @@ export const moduleConfig: Record<string, { description: string; emptyTitle: str
   Services: { description: "Gérez vos prestations complémentaires : traiteur, décoration, régie DJ ou sécurité.", emptyTitle: "Aucun service configuré", emptyText: "Créez vos prestations pour enrichir l'offre de vos événements.", addLabel: "Ajouter un service", fieldLabel: "Nom du service", placeholder: "Ex. Décoration florale prestige" },
   Paiements: { description: "Suivez les acomptes, soldes et transactions en temps réel.", emptyTitle: "Aucun paiement enregistré", emptyText: "Les paiements associés à vos réservations apparaîtront ici.", addLabel: "Enregistrer un paiement", fieldLabel: "Référence du paiement", placeholder: "Ex. Acompte réservation #001" },
   Contrats: { description: "Préparez, envoyez et suivez les contrats de mise à disposition.", emptyTitle: "Aucun contrat", emptyText: "Créez un contrat pour sécuriser vos réceptions.", addLabel: "Créer un contrat", fieldLabel: "Nom du contrat", placeholder: "Ex. Contrat mariage Martin" },
-  Employés: { description: "Coordonnez votre équipe et définissez les rôles et accès.", emptyTitle: "Aucun collaborateur ajouté", emptyText: "Ajoutez les membres de votre équipe pour orchestrer vos événements.", addLabel: "Ajouter un collaborateur", fieldLabel: "Nom du collaborateur", placeholder: "Ex. Léa Bernard" },
+  Abonnement: { description: "Gérez votre formule, options de facturation et accès VIP.", emptyTitle: "Abonnement Actif", emptyText: "Votre compte bénéficie de la formule VENORIA Prestige.", addLabel: "Modifier mon forfait", fieldLabel: "Formule", placeholder: "VENORIA Prestige" },
   Rapports: { description: "Analysez la performance financière et le taux d'occupation.", emptyTitle: "Aucun rapport généré", emptyText: "Générez votre premier rapport pour suivre la performance de votre activité.", addLabel: "Générer un rapport", fieldLabel: "Nom du rapport", placeholder: "Ex. Rapport mensuel" },
   Notifications: { description: "Retrouvez vos alertes, rappels et mises à jour importantes.", emptyTitle: "Tout est calme", emptyText: "Vous n’avez aucune notification à traiter pour le moment.", addLabel: "Créer une note", fieldLabel: "Message", placeholder: "Ex. Rappeler le traiteur" },
   Paramètres: { description: "Configurez votre établissement, devise et préférences.", emptyTitle: "Configuration", emptyText: "Ajustez vos paramètres d'exploitation.", addLabel: "Ajouter un réglage", fieldLabel: "Nom du réglage", placeholder: "Ex. Devise par défaut" },
@@ -375,21 +375,6 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
           </>
         )}
 
-        {active === "Employés" && (
-          <>
-            <div className="form-section">
-              <h3>Profil du collaborateur</h3>
-              <div className="form-grid">
-                <Field label="Nom complet" name="name" placeholder="Léa Bernard" required />
-                <Field label="Adresse e-mail professionnelle" name="email" type="email" placeholder="l.bernard@venoria.fr" required />
-                <Field label="Numéro de téléphone" name="phone" placeholder="06 11 22 33 44" />
-                <SelectField label="Rôle d'accès" name="role" options={["MANAGER", "ADMIN", "EMPLOYEE", "OWNER"]} required />
-                <SelectField label="Statut" name="status" options={["active", "inactive"]} />
-              </div>
-            </div>
-          </>
-        )}
-
         {active === "Services" && (
           <>
             <div className="form-section">
@@ -454,7 +439,7 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
           </>
         )}
 
-        {!["Salles", "Clients", "Employés", "Services", "Réservations", "Paiements", "Contrats"].includes(active) && (
+        {!["Salles", "Clients", "Abonnement", "Services", "Réservations", "Paiements", "Contrats"].includes(active) && (
           <div className="form-section">
             <div className="form-grid">
               <Field label={moduleConfig[active]?.fieldLabel ?? "Titre"} name="name" placeholder={moduleConfig[active]?.placeholder ?? "Nom de l'élément"} required />

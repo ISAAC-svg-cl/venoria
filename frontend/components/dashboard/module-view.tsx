@@ -9,6 +9,7 @@ import { ReportsModule } from "./reports-module";
 import { SettingsModule } from "./settings-module";
 import { NotificationsModule } from "./notifications-module";
 import { CalendarModule } from "./calendar-module";
+import { SubscriptionModule } from "./subscription-module";
 import type { RecordItem, Section } from "./types";
 
 const sectionIcons = Object.fromEntries(navigation) as Record<string, typeof LayoutDashboard>;
@@ -27,6 +28,7 @@ export function ModuleView({ active, records, onAdd, onDelete }: ModuleViewProps
 
   if (active === "Calendrier") return <CalendarModule records={records} onAdd={onAdd} onDelete={onDelete} />;
   if (active === "Paiements") return <PaymentModule records={records} onAdd={onAdd} onDelete={onDelete} />;
+  if (active === "Abonnement") return <SubscriptionModule />;
   if (active === "Rapports") return <ReportsModule />;
   if (active === "Paramètres") return <SettingsModule />;
   if (active === "Notifications") return <NotificationsModule records={records} />;

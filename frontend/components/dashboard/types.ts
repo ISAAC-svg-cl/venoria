@@ -9,7 +9,7 @@ export type Section =
   | "Services"
   | "Paiements"
   | "Contrats"
-  | "Employés"
+  | "Abonnement"
   | "Rapports"
   | "Notifications"
   | "Paramètres";

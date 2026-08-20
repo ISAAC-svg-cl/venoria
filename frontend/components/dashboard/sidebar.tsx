@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, FileText, Home, LayoutDashboard, LogOut, MoreHorizontal, Settings, Sparkles, Users, WalletCards, X, Activity, CalendarDays } from "lucide-react";
+import { Bell, FileText, Home, LayoutDashboard, LogOut, MoreHorizontal, Settings, Sparkles, Users, WalletCards, X, Activity, CalendarDays, Crown } from "lucide-react";
 import type { Section } from "./types";
 
 export const navigation = [
@@ -12,7 +12,7 @@ export const navigation = [
   ["Services", Sparkles],
   ["Paiements", WalletCards],
   ["Contrats", FileText],
-  ["Employés", Users],
+  ["Abonnement", Crown],
   ["Rapports", Activity],
 ] as const;
 

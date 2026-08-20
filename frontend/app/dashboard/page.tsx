@@ -22,7 +22,7 @@ const resourceBySection: Partial<Record<Section, string>> = {
   Services: "services",
   Paiements: "payments",
   Contrats: "contracts",
-  Employés: "employees",
+  Abonnement: "subscription",
   Rapports: "reports",
   Notifications: "notifications",
   Paramètres: "settings",
@@ -202,13 +202,6 @@ export default function DashboardPage() {
           source: String(data.get("source") ?? "").trim(),
           city: String(data.get("city") ?? "").trim(),
           country: String(data.get("country") ?? "France").trim(),
-        };
-      } else if (active === "Employés") {
-        body = {
-          name,
-          email: String(data.get("email") ?? "").trim(),
-          phone: String(data.get("phone") ?? "").trim(),
-          role: String(data.get("role") ?? "EMPLOYEE"),
         };
       } else if (active === "Services") {
         body = {
