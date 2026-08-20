@@ -61,7 +61,7 @@ button { cursor: pointer; }
 }
 
 .sidebar {
-  width: 256px;
+  width: 252px;
   min-height: 100vh;
   flex-shrink: 0;
   background: linear-gradient(180deg, #142c26 0%, #0d1b17 100%);
@@ -314,7 +314,7 @@ button { cursor: pointer; }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   margin-bottom: 27px;
 }
