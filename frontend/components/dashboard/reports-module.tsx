@@ -2,6 +2,7 @@
 
 import { Activity, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
+import { formatAmount, type CurrencyCode } from "@/lib/currency";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -15,6 +16,7 @@ type SummaryData = {
 
 export function ReportsModule() {
   const [summary, setSummary] = useState<SummaryData | null>(null);
+  const [currency, setCurrencyState] = useState<CurrencyCode>("FC");
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -22,7 +24,21 @@ export function ReportsModule() {
       .then((response) => (response.ok ? response.json() : Promise.reject()))
       .then((payload: { summary: SummaryData }) => setSummary(payload.summary))
       .catch(() => setError(true));
+
+    // Load the currency setting from API
+    fetch(`${apiUrl}/api/settings`, { credentials: "include" })
+      .then((r) => r.json())
+      .then((payload: { data?: { currency?: string } }) => {
+        if (payload.data?.currency) {
+          setCurrencyState(payload.data.currency as CurrencyCode);
+        }
+      })
+      .catch(() => undefined);
   }, []);
+
+  const revenueDisplay = summary
+    ? formatAmount(Number(summary.revenue_cents), currency)
+    : "…";
 
   return (
     <section className="module-view">
@@ -30,7 +46,7 @@ export function ReportsModule() {
         <div>
           <div className="module-title">
             <Activity size={22} />
-            <h1>Rapports & Indicateurs Clés</h1>
+            <h1>Rapports &amp; Indicateurs Clés</h1>
           </div>
           <p>Analysez la performance réelle et consolidée de votre établissement.</p>
         </div>
@@ -47,7 +63,7 @@ export function ReportsModule() {
       ) : (
         <div className="report-grid">
           {[
-            ["Chiffre d’affaires encaissé", summary ? `${(Number(summary.revenue_cents) / 100).toLocaleString("fr-FR", { minimumFractionDigits: 2 })} €` : "…"],
+            ["Chiffre d'affaires encaissé", revenueDisplay],
             ["Réservations actives", summary?.reservations ?? "…"],
             ["Clients enregistrés", summary?.clients ?? "…"],
             ["Paiements enregistrés", summary?.payments ?? "…"],
@@ -56,7 +72,7 @@ export function ReportsModule() {
             <div className="report-card" key={label}>
               <span>{label}</span>
               <strong>{value}</strong>
-              <small>Données PostgreSQL temps réel</small>
+              <small>Données en temps réel</small>
             </div>
           ))}
         </div>

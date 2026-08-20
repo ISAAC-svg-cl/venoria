@@ -35,7 +35,7 @@ const store = {
   ],
   settings: {
     name: "VENORIA Prestige & Domaines",
-    currency: "EUR",
+    currency: "FC",
   },
 };
 
