@@ -61,7 +61,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
   if (path === "auth/me") {
     const user = await getAuthUser(req);
     if (!user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
-    return NextResponse.json({ user });
+    return NextResponse.json({
+      user: {
+        id: (user.id as string) || (user.sub as string) || "usr-admin-venoria",
+        email: (user.email as string) || "admin@venoria.fr",
+        name: "Administrateur",
+        role: "Administrateur",
+      },
+    });
   }
 
   if (path === "reports/summary") {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "venoria-cache-v1.0.0";
+const CACHE_NAME = "venoria-cache-v1.0.2";
 const PRECACHE_ASSETS = [
   "/",
   "/login",
