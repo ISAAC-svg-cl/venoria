@@ -19,6 +19,7 @@ export type RecordItem = {
   title: string;
   detail: string;
   status: string;
+  image?: string;
 };
 
 export type StatItem = readonly [

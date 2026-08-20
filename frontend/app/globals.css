@@ -166,3 +166,173 @@ button { cursor: pointer; }
   }
 }
 
+/* Image Upload, Thumbnails & Bulk Import Enhancements */
+.image-upload-zone {
+  border: 1.5px dashed rgba(212, 175, 55, 0.4);
+  background: rgba(20, 44, 38, 0.25);
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.image-upload-zone:hover, .image-upload-zone.dragging {
+  border-color: var(--gold, #d4af37);
+  background: rgba(212, 175, 55, 0.08);
+}
+.image-upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.image-upload-zone .upload-icon {
+  color: var(--gold, #d4af37);
+  opacity: 0.9;
+}
+.image-upload-zone p {
+  margin: 0;
+  font-size: 13px;
+  color: inherit;
+}
+.image-upload-zone small {
+  font-size: 11px;
+  opacity: 0.65;
+}
+
+.image-preview-container {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: #0d1b17;
+  max-height: 180px;
+}
+.image-preview-container img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+.image-preview-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.image-preview-remove:hover {
+  background: #e11d48;
+}
+
+.record-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.record-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.record-thumbnail {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.record-thumbnail-fallback {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: rgba(20, 44, 38, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold, #d4af37);
+  flex-shrink: 0;
+}
+
+.import-tab-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  border-radius: 10px;
+}
+.import-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  transition: all 0.2s;
+}
+.import-tab-btn.active {
+  background: rgba(212, 175, 55, 0.18);
+  color: var(--gold, #d4af37);
+  opacity: 1;
+}
+
+.import-presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+.import-preset-card {
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  background: rgba(20, 44, 38, 0.3);
+  transition: all 0.2s ease;
+  text-align: left;
+  padding: 0;
+}
+.import-preset-card:hover {
+  border-color: var(--gold, #d4af37);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+.import-preset-card img {
+  width: 100%;
+  height: 85px;
+  object-fit: cover;
+}
+.import-preset-body {
+  padding: 10px;
+}
+.import-preset-body strong {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.import-preset-body span {
+  font-size: 11px;
+  opacity: 0.7;
+}
+

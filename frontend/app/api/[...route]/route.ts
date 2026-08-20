@@ -6,8 +6,8 @@ const secret = new TextEncoder().encode(process.env.JWT_SECRET ?? "venoria-secre
 // In-memory data store for serverless demo & live preview
 const store = {
   halls: [
-    { id: 1, name: "Le Jardin d’Opale", capacity: 250, city: "Chantilly", address: "12 route des Châteaux", price_cents: 350000, status: "active" },
-    { id: 2, name: "Le Grand Salon Vénitien", capacity: 180, city: "Paris", address: "8 place Vendôme", price_cents: 480000, status: "active" },
+    { id: 1, name: "Le Jardin d’Opale", capacity: 250, city: "Chantilly", address: "12 route des Châteaux", price_cents: 350000, status: "active", image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&auto=format&fit=crop&q=80" },
+    { id: 2, name: "Le Grand Salon Vénitien", capacity: 180, city: "Paris", address: "8 place Vendôme", price_cents: 480000, status: "active", image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80" },
   ],
   clients: [
     { id: 1, name: "Sophie & Marc Martin", email: "sophie.martin@email.com", phone: "06 12 34 56 78", company: "Particulier", client_type: "Particulier", status: "active" },
@@ -159,6 +159,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       address: body.address || "",
       price_cents: Number(body.priceCents || 0),
       status: "active",
+      image: body.image || body.imageUrl || "",
     };
     store.halls.unshift(newHall);
     return NextResponse.json({ hall: newHall }, { status: 201 });

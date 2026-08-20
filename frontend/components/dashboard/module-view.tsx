@@ -54,7 +54,15 @@ export function ModuleView({ active, records, onAdd, onDelete }: ModuleViewProps
         <div className="record-list">
           {records.map((record) => (
             <article className="record-row" key={record.id}>
-              <div>
+              {record.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={record.image} alt={record.title} className="record-thumbnail" />
+              ) : active === "Salles" ? (
+                <div className="record-thumbnail-fallback">
+                  <Icon size={22} />
+                </div>
+              ) : null}
+              <div className="record-row-main">
                 <strong>{record.title}</strong>
                 <span>{record.detail}</span>
               </div>

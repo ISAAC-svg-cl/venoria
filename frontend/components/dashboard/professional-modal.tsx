@@ -1,12 +1,12 @@
 "use client";
 
-import { Plus, X } from "lucide-react";
-import { FormEvent } from "react";
+import { Image as ImageIcon, Plus, Sparkles, Trash2, UploadCloud, X } from "lucide-react";
+import { ChangeEvent, DragEvent, FormEvent, useState } from "react";
 import type { Section } from "./types";
 
 export const moduleConfig: Record<string, { description: string; emptyTitle: string; emptyText: string; addLabel: string; fieldLabel: string; placeholder: string }> = {
   Calendrier: { description: "Visualisez les disponibilités et événements de vos salles.", emptyTitle: "Votre calendrier est libre", emptyText: "Les réservations et événements apparaîtront ici dès leur création.", addLabel: "Créer un événement", fieldLabel: "Nom de l’événement", placeholder: "Ex. Mariage de Sophie et Marc" },
-  Salles: { description: "Centralisez vos espaces d'exception, capacités, tarifs saisonniers et équipements.", emptyTitle: "Aucune salle enregistrée", emptyText: "Ajoutez votre première salle pour commencer à organiser vos réceptions.", addLabel: "Ajouter une salle", fieldLabel: "Nom de la salle", placeholder: "Ex. Le Jardin d’Opale" },
+  Salles: { description: "Centralisez vos espaces d'exception, capacités, tarifs saisonniers, photos et équipements.", emptyTitle: "Aucune salle enregistrée", emptyText: "Ajoutez votre première salle pour commencer à organiser vos réceptions.", addLabel: "Ajouter une salle", fieldLabel: "Nom de la salle", placeholder: "Ex. Le Jardin d’Opale" },
   Réservations: { description: "Suivez les demandes, événements, acomptes et confirmations.", emptyTitle: "Aucune réservation", emptyText: "Les nouvelles demandes de réservation seront centralisées dans cet espace.", addLabel: "Nouvelle réservation", fieldLabel: "Nom du client ou événement", placeholder: "Ex. Mariage de Sophie et Marc" },
   Clients: { description: "Conservez une vue complète de vos clients particuliers et entreprises.", emptyTitle: "Votre carnet client est vide", emptyText: "Ajoutez un client pour suivre ses coordonnées, préférences et historique.", addLabel: "Ajouter un client", fieldLabel: "Nom complet", placeholder: "Ex. Sophie Martin" },
   Services: { description: "Gérez vos prestations complémentaires : traiteur, décoration, régie DJ ou sécurité.", emptyTitle: "Aucun service configuré", emptyText: "Créez vos prestations pour enrichir l'offre de vos événements.", addLabel: "Ajouter un service", fieldLabel: "Nom du service", placeholder: "Ex. Décoration florale prestige" },
@@ -18,6 +18,45 @@ export const moduleConfig: Record<string, { description: string; emptyTitle: str
   Paramètres: { description: "Configurez votre établissement, devise et préférences.", emptyTitle: "Configuration", emptyText: "Ajustez vos paramètres d'exploitation.", addLabel: "Ajouter un réglage", fieldLabel: "Nom du réglage", placeholder: "Ex. Devise par défaut" },
 };
 
+const PRESET_HALLS = [
+  {
+    name: "Le Château Royal de Venoria",
+    capacity: "350",
+    city: "Chantilly",
+    address: "14 allée des Châteaux",
+    price: "4500",
+    image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&auto=format&fit=crop&q=80",
+    desc: "Parc boisé, grand salon d'honneur et lustres en cristal.",
+  },
+  {
+    name: "L'Orangerie Impériale & Verrière",
+    capacity: "220",
+    city: "Versailles",
+    address: "2 place du Grand Trianon",
+    price: "3800",
+    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80",
+    desc: "Verrière monumentale et jardin à la française.",
+  },
+  {
+    name: "Le Pavillon de Cristal",
+    capacity: "180",
+    city: "Cannes",
+    address: "Boulevard de la Croisette",
+    price: "5200",
+    image: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800&auto=format&fit=crop&q=80",
+    desc: "Vue panoramique sur mer et architecture contemporaine.",
+  },
+  {
+    name: "Le Rooftop Émeraude & Baie",
+    capacity: "140",
+    city: "Nice",
+    address: "Promenade des Anglais",
+    price: "3200",
+    image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&auto=format&fit=crop&q=80",
+    desc: "Espace à ciel ouvert pour réceptions d'exception.",
+  },
+];
+
 function Field({
   label,
   name,
@@ -28,6 +67,8 @@ function Field({
   step,
   minLength,
   defaultValue,
+  value,
+  onChange,
 }: {
   label: string;
   name: string;
@@ -38,6 +79,8 @@ function Field({
   step?: string;
   minLength?: number;
   defaultValue?: string;
+  value?: string | number;
+  onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
 }) {
   return (
     <label>
@@ -52,6 +95,8 @@ function Field({
         step={step}
         minLength={minLength}
         defaultValue={defaultValue}
+        value={value}
+        onChange={onChange}
       />
     </label>
   );
@@ -74,7 +119,7 @@ function SelectField({
     <label>
       {label}
       {required && " *"}
-      <select name={name} defaultValue={defaultValue ?? options[0]} required={required}>
+      <select name={name} required={required} defaultValue={defaultValue}>
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
@@ -97,11 +142,54 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
   const title = moduleConfig[active]?.addLabel ?? "Ajouter un élément";
   const isPayment = active === "Paiements";
   const isReservation = active === "Réservations";
+  const isHall = active === "Salles";
+
+  const [hallTab, setHallTab] = useState<"form" | "presets">("form");
+  const [hallImage, setHallImage] = useState<string>("");
+  const [hallName, setHallName] = useState<string>("");
+  const [hallCapacity, setHallCapacity] = useState<string>("");
+  const [hallCity, setHallCity] = useState<string>("");
+  const [hallAddress, setHallAddress] = useState<string>("");
+  const [hallPrice, setHallPrice] = useState<string>("");
+  const [isDragging, setIsDragging] = useState(false);
+
+  function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setHallImage(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  function handleDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleFile(file);
+  }
+
+  function applyPreset(preset: typeof PRESET_HALLS[0]) {
+    setHallName(preset.name);
+    setHallCapacity(preset.capacity);
+    setHallCity(preset.city);
+    setHallAddress(preset.address);
+    setHallPrice(preset.price);
+    setHallImage(preset.image);
+    setHallTab("form");
+  }
 
   return (
     <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <form
-        className={`record-modal professional-modal ${isReservation || active === "Salles" ? "wide-modal" : ""}`}
+        className={`record-modal professional-modal ${isReservation || isHall ? "wide-modal" : ""}`}
         onSubmit={onSubmit}
         onClick={(event) => event.stopPropagation()}
       >
@@ -118,15 +206,131 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
           </div>
         )}
 
-        {active === "Salles" && (
+        {isHall && (
+          <div className="import-tab-bar">
+            <button
+              type="button"
+              className={`import-tab-btn ${hallTab === "form" ? "active" : ""}`}
+              onClick={() => setHallTab("form")}
+            >
+              Formulaire &amp; Photo
+            </button>
+            <button
+              type="button"
+              className={`import-tab-btn ${hallTab === "presets" ? "active" : ""}`}
+              onClick={() => setHallTab("presets")}
+            >
+              <Sparkles size={14} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+              Modèles &amp; Import Prestige
+            </button>
+          </div>
+        )}
+
+        {isHall && hallTab === "presets" && (
+          <div className="form-section">
+            <h3>Salles d&apos;exception prêtes à l&apos;importation</h3>
+            <p style={{ fontSize: "12px", opacity: 0.8, margin: "0 0 12px 0" }}>
+              Sélectionnez une salle pour pré-remplir instantanément sa fiche avec sa photo haute définition.
+            </p>
+            <div className="import-presets-grid">
+              {PRESET_HALLS.map((preset) => (
+                <button
+                  type="button"
+                  key={preset.name}
+                  className="import-preset-card"
+                  onClick={() => applyPreset(preset)}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preset.image} alt={preset.name} />
+                  <div className="import-preset-body">
+                    <strong>{preset.name}</strong>
+                    <span>{preset.capacity} pers. · {preset.city} · ${Number(preset.price).toLocaleString()}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {isHall && hallTab === "form" && (
           <>
+            <div className="form-section">
+              <h3>Photo &amp; Visuel de la salle</h3>
+              <input type="hidden" name="image" value={hallImage} />
+              {hallImage ? (
+                <div className="image-preview-container">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={hallImage} alt="Aperçu de la salle" />
+                  <button
+                    type="button"
+                    className="image-preview-remove"
+                    onClick={() => setHallImage("")}
+                    aria-label="Supprimer la photo"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className={`image-upload-zone ${isDragging ? "dragging" : ""}`}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                >
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/jpg"
+                    onChange={handleFileChange}
+                  />
+                  <div className="upload-icon">
+                    <UploadCloud size={30} />
+                  </div>
+                  <p>
+                    <strong>Glissez une photo de la salle</strong> ou cliquez pour parcourir
+                  </p>
+                  <small>Formats acceptés : PNG, JPG, WebP (Haute résolution)</small>
+                </div>
+              )}
+            </div>
+
             <div className="form-section">
               <h3>Caractéristiques du lieu</h3>
               <div className="form-grid">
-                <Field label="Nom de la salle" name="name" placeholder="Ex. Le Jardin d’Opale" required />
-                <Field label="Capacité maximale (personnes)" name="capacity" type="number" placeholder="250" min="1" required />
-                <Field label="Adresse" name="address" placeholder="12 route des Châteaux" />
-                <Field label="Ville" name="city" placeholder="Chantilly" />
+                <Field
+                  label="Nom de la salle"
+                  name="name"
+                  placeholder="Ex. Le Jardin d’Opale"
+                  value={hallName}
+                  onChange={(e) => setHallName(e.target.value)}
+                  required
+                />
+                <Field
+                  label="Capacité maximale (personnes)"
+                  name="capacity"
+                  type="number"
+                  placeholder="250"
+                  min="1"
+                  value={hallCapacity}
+                  onChange={(e) => setHallCapacity(e.target.value)}
+                  required
+                />
+                <Field
+                  label="Adresse"
+                  name="address"
+                  placeholder="12 route des Châteaux"
+                  value={hallAddress}
+                  onChange={(e) => setHallAddress(e.target.value)}
+                />
+                <Field
+                  label="Ville"
+                  name="city"
+                  placeholder="Chantilly"
+                  value={hallCity}
+                  onChange={(e) => setHallCity(e.target.value)}
+                />
                 <Field label="Code postal" name="postalCode" placeholder="60500" />
                 <Field label="Pays" name="country" placeholder="France" defaultValue="France" />
               </div>
@@ -134,7 +338,17 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
             <div className="form-section">
               <h3>Tarification ($)</h3>
               <div className="form-grid">
-                <Field label="Tarif standard ($)" name="price" type="number" min="0" step="0.01" placeholder="2500" required />
+                <Field
+                  label="Tarif standard ($)"
+                  name="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="2500"
+                  value={hallPrice}
+                  onChange={(e) => setHallPrice(e.target.value)}
+                  required
+                />
                 <Field label="Basse saison ($)" name="lowSeasonPrice" type="number" min="0" step="0.01" placeholder="1800" />
                 <Field label="Haute saison ($)" name="highSeasonPrice" type="number" min="0" step="0.01" placeholder="3200" />
                 <SelectField label="Statut d'exploitation" name="status" options={["active", "inactive"]} />
@@ -146,21 +360,16 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
         {active === "Clients" && (
           <>
             <div className="form-section">
-              <h3>Identité & Coordonnées</h3>
+              <h3>Identité &amp; Coordonnées</h3>
               <div className="form-grid">
-                <Field label="Nom complet / Contact" name="name" placeholder="Sophie Martin" required />
+                <Field label="Nom complet du client" name="name" placeholder="Ex. Sophie & Marc Martin" required />
+                <Field label="Adresse e-mail" name="email" type="email" placeholder="client@domaine.fr" required />
                 <Field label="Numéro de téléphone" name="phone" placeholder="06 12 34 56 78" required />
-                <Field label="Adresse email" name="email" type="email" placeholder="sophie.martin@email.com" />
-                <Field label="Entreprise / Organisation" name="company" placeholder="Société Martin & Associés" />
+                <Field label="Entreprise / Société" name="company" placeholder="Entreprise Martin SAS ou Particulier" />
+                <Field label="Adresse postale" name="address" placeholder="10 avenue Foch" />
                 <Field label="Ville" name="city" placeholder="Paris" />
-                <Field label="Pays" name="country" placeholder="France" defaultValue="France" />
-              </div>
-            </div>
-            <div className="form-section">
-              <h3>Profil & Origine</h3>
-              <div className="form-grid">
-                <SelectField label="Type de client" name="clientType" options={["Particulier", "Entreprise", "Agence événementielle"]} />
-                <Field label="Canal d'acquisition" name="source" placeholder="Site web, Bouche-à-oreille, Instagram..." />
+                <SelectField label="Type de client" name="clientType" options={["Particulier", "Entreprise", "Agence", "Autre"]} />
+                <SelectField label="Statut du compte" name="status" options={["active", "inactive"]} />
               </div>
             </div>
           </>
@@ -169,12 +378,13 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
         {active === "Employés" && (
           <>
             <div className="form-section">
-              <h3>Collaborateur & Permissions</h3>
+              <h3>Profil du collaborateur</h3>
               <div className="form-grid">
                 <Field label="Nom complet" name="name" placeholder="Léa Bernard" required />
-                <Field label="Email professionnel" name="email" type="email" placeholder="lea.bernard@venoria.fr" required />
-                <Field label="Téléphone de contact" name="phone" placeholder="06 98 76 54 32" />
+                <Field label="Adresse e-mail professionnelle" name="email" type="email" placeholder="l.bernard@venoria.fr" required />
+                <Field label="Numéro de téléphone" name="phone" placeholder="06 11 22 33 44" />
                 <SelectField label="Rôle d'accès" name="role" options={["MANAGER", "ADMIN", "EMPLOYEE", "OWNER"]} required />
+                <SelectField label="Statut" name="status" options={["active", "inactive"]} />
               </div>
             </div>
           </>
@@ -183,7 +393,7 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
         {active === "Services" && (
           <>
             <div className="form-section">
-              <h3>Prestation & Tarification</h3>
+              <h3>Prestation &amp; Tarification</h3>
               <div className="form-grid">
                 <Field label="Nom du service" name="name" placeholder="Décoration florale sur-mesure" required />
                 <Field label="Catégorie" name="category" placeholder="Décoration, Traiteur, Régie son..." required />

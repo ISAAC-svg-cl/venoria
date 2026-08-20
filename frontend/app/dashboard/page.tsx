@@ -80,7 +80,7 @@ export default function DashboardPage() {
         if (!response.ok) throw new Error("Impossible de charger les données.");
         const payload = (await response.json()) as {
           records?: RecordItem[];
-          halls?: Array<{ id: number; name: string; capacity: number; city: string; address: string; price_cents: number; status: string }>;
+          halls?: Array<{ id: number; name: string; capacity: number; city: string; address: string; price_cents: number; status: string; image?: string; image_url?: string }>;
           clients?: Array<{ id: number; name: string; email: string; phone: string; company: string; status: string }>;
           services?: Array<{ id: number; name: string; category: string; provider: string; price_cents: number; status: string }>;
           reservations?: Array<{ id: number; title: string; event_type: string; starts_at: string; ends_at: string; guest_count: number; total_cents: number; status: string }>;
@@ -96,8 +96,8 @@ export default function DashboardPage() {
             id: item.id,
             title: item.name,
             detail: `${item.capacity} pers. · ${item.city ? `${item.city} · ` : ""}${formatAmount(item.price_cents, currency)}`,
-
             status: item.status === "active" ? "Disponible" : "Indisponible",
+            image: item.image || item.image_url,
           })) ??
           payload.clients?.map((item) => ({
             id: item.id,
@@ -190,6 +190,7 @@ export default function DashboardPage() {
           priceCents: Math.round(Number(data.get("price") || 0) * 100),
           lowSeasonPriceCents: Math.round(Number(data.get("lowSeasonPrice") || 0) * 100),
           highSeasonPriceCents: Math.round(Number(data.get("highSeasonPrice") || 0) * 100),
+          image: String(data.get("image") ?? "").trim(),
         };
       } else if (active === "Clients") {
         body = {
@@ -287,8 +288,9 @@ export default function DashboardPage() {
         [active]: list.map((item: Record<string, unknown>) => ({
           id: (item.id as string | number) ?? Math.random(),
           title: String(item.name ?? item.title ?? item.reference ?? "Élément"),
-          detail: String(item.detail ?? item.email ?? (item.capacity ? `${item.capacity} pers.` : "Créé depuis VENORIA")),
+          detail: String(item.detail ?? item.email ?? (item.capacity ? `${item.capacity} pers. · ${formatAmount(Number(item.price_cents || 0), currency)}` : "Créé depuis VENORIA")),
           status: String(item.status ?? "Actif"),
+          image: (item.image as string) || (item.image_url as string) || undefined,
         })),
       }));
     } catch (error) {
