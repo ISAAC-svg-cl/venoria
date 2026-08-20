@@ -4,7 +4,7 @@ import { Bell, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import type { RecordItem } from "./types";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
 export function NotificationsModule({ records }: { records: RecordItem[] }) {
   const [items, setItems] = useState(records);

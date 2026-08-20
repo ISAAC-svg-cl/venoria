@@ -3,7 +3,7 @@
 import { Activity, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
 type SummaryData = {
   revenue_cents: string;

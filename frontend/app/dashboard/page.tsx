@@ -11,7 +11,7 @@ import { ModuleView } from "@/components/dashboard/module-view";
 import { ProfessionalModal } from "@/components/dashboard/professional-modal";
 import type { RecordItem, Section, StatItem } from "@/components/dashboard/types";
 
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
 const resourceBySection: Partial<Record<Section, string>> = {
   Calendrier: "calendar",
