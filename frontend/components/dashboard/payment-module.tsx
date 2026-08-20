@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Plus, X } from "lucide-react";
+import { CreditCard, FileText, Plus, X } from "lucide-react";
 import type { RecordItem } from "./types";
 
 interface PaymentModuleProps {
@@ -58,7 +58,7 @@ export function PaymentModule({ records, onAdd, onDelete }: PaymentModuleProps) 
             <span>Référence</span>
             <span>Détail</span>
             <span>Statut</span>
-            <span>Action</span>
+            <span>Actions</span>
           </div>
           {records.map((record) => (
             <div className="payment-table-row" key={record.id}>
@@ -67,13 +67,33 @@ export function PaymentModule({ records, onAdd, onDelete }: PaymentModuleProps) 
               <span className={`status ${record.status === "refunded" ? "status-annulée" : "status-confirmée"}`}>
                 {record.status}
               </span>
-              <button
-                className="icon-button"
-                onClick={() => onDelete(record.id)}
-                aria-label="Supprimer / Rembourser le paiement"
-              >
-                <X size={17} />
-              </button>
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button
+                  className="icon-button"
+                  title="Télécharger le reçu PDF"
+                  onClick={() => {
+                    import("@/lib/pdf-generator").then((mod) => {
+                      mod.generateInvoicePdf({
+                        reference: record.title,
+                        amount: record.detail.split("·")[0]?.trim() || "$0.00",
+                        method: record.detail.split("·")[1]?.trim() || "Virement",
+                        date: record.detail.split("·")[2]?.trim() || new Date().toLocaleDateString("fr-FR"),
+                        status: record.status,
+                      });
+                    });
+                  }}
+                  aria-label="Télécharger le reçu PDF"
+                >
+                  <FileText size={16} />
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={() => onDelete(record.id)}
+                  aria-label="Supprimer / Rembourser le paiement"
+                >
+                  <X size={16} />
+                </button>
+              </div>
             </div>
           ))}
         </div>

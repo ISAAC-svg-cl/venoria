@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
+import { getDbPool, initDb } from "@/lib/db";
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET ?? "venoria-secret-key-2026");
 
-// In-memory data store for serverless demo & live preview
-// Clean store without demonstration data
+// In-memory data store fallback
 const store = {
   halls: [] as Array<{ id: number; name: string; capacity: number; city: string; address: string; price_cents: number; status: string; image?: string }>,
   clients: [] as Array<{ id: number; name: string; email: string; phone: string; company: string; client_type: string; status: string }>,
@@ -36,9 +36,14 @@ async function getAuthUser(req: NextRequest) {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ route: string[] }> }) {
   const { route } = await params;
   const path = route.join("/");
+  const db = getDbPool();
+
+  if (db) {
+    await initDb();
+  }
 
   if (path === "health") {
-    return NextResponse.json({ status: "ok", service: "venoria-serverless" });
+    return NextResponse.json({ status: "ok", database: db ? "postgresql" : "in-memory" });
   }
 
   if (path === "auth/me") {
@@ -55,6 +60,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
   }
 
   if (path === "reports/summary") {
+    if (db) {
+      try {
+        const [revRes, resCount, clientCount, payCount, hallCount] = await Promise.all([
+          db.query("SELECT COALESCE(SUM(amount_cents), 0) AS rev FROM payments WHERE status = 'confirmed'"),
+          db.query("SELECT COUNT(*) AS count FROM reservations"),
+          db.query("SELECT COUNT(*) AS count FROM clients"),
+          db.query("SELECT COUNT(*) AS count FROM payments"),
+          db.query("SELECT COUNT(*) AS count FROM halls"),
+        ]);
+        return NextResponse.json({
+          summary: {
+            revenue_cents: String(revRes.rows[0]?.rev || 0),
+            reservations: String(resCount.rows[0]?.count || 0),
+            clients: String(clientCount.rows[0]?.count || 0),
+            payments: String(payCount.rows[0]?.count || 0),
+            halls: String(hallCount.rows[0]?.count || 0),
+          },
+        });
+      } catch (err) {
+        console.error("DB Summary error:", err);
+      }
+    }
+
     const revenue = store.payments.filter((p) => p.status === "confirmed").reduce((acc, p) => acc + p.amount_cents, 0);
     return NextResponse.json({
       summary: {
@@ -67,15 +95,69 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
     });
   }
 
-  if (path === "halls") return NextResponse.json({ halls: store.halls });
-  if (path === "clients") return NextResponse.json({ clients: store.clients });
-  if (path === "services") return NextResponse.json({ services: store.services });
-  if (path === "reservations") return NextResponse.json({ reservations: store.reservations });
-  if (path === "payments") return NextResponse.json({ payments: store.payments });
-  if (path === "contracts") return NextResponse.json({ contracts: store.contracts });
-  if (path === "employees") return NextResponse.json({ employees: store.employees });
-  if (path === "notifications") return NextResponse.json({ notifications: store.notifications });
-  if (path === "settings") return NextResponse.json({ data: store.settings });
+  if (path === "halls") {
+    if (db) {
+      const res = await db.query("SELECT * FROM halls ORDER BY id DESC").catch(() => null);
+      if (res) return NextResponse.json({ halls: res.rows });
+    }
+    return NextResponse.json({ halls: store.halls });
+  }
+
+  if (path === "clients") {
+    if (db) {
+      const res = await db.query("SELECT * FROM clients ORDER BY id DESC").catch(() => null);
+      if (res) return NextResponse.json({ clients: res.rows });
+    }
+    return NextResponse.json({ clients: store.clients });
+  }
+
+  if (path === "services") {
+    if (db) {
+      const res = await db.query("SELECT * FROM services ORDER BY id DESC").catch(() => null);
+      if (res) return NextResponse.json({ services: res.rows });
+    }
+    return NextResponse.json({ services: store.services });
+  }
+
+  if (path === "reservations") {
+    if (db) {
+      const res = await db.query("SELECT * FROM reservations ORDER BY id DESC").catch(() => null);
+      if (res) return NextResponse.json({ reservations: res.rows });
+    }
+    return NextResponse.json({ reservations: store.reservations });
+  }
+
+  if (path === "payments") {
+    if (db) {
+      const res = await db.query("SELECT * FROM payments ORDER BY id DESC").catch(() => null);
+      if (res) return NextResponse.json({ payments: res.rows });
+    }
+    return NextResponse.json({ payments: store.payments });
+  }
+
+  if (path === "contracts") {
+    if (db) {
+      const res = await db.query("SELECT * FROM contracts ORDER BY id DESC").catch(() => null);
+      if (res) return NextResponse.json({ contracts: res.rows });
+    }
+    return NextResponse.json({ contracts: store.contracts });
+  }
+
+  if (path === "employees") {
+    if (db) {
+      const res = await db.query("SELECT * FROM employees ORDER BY id DESC").catch(() => null);
+      if (res) return NextResponse.json({ employees: res.rows });
+    }
+    return NextResponse.json({ employees: store.employees });
+  }
+
+  if (path === "notifications") {
+    return NextResponse.json({ notifications: store.notifications });
+  }
+
+  if (path === "settings") {
+    return NextResponse.json({ data: store.settings });
+  }
 
   return NextResponse.json({ records: [] });
 }
@@ -83,13 +165,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ rout
 export async function POST(req: NextRequest, { params }: { params: Promise<{ route: string[] }> }) {
   const { route } = await params;
   const path = route.join("/");
+  const db = getDbPool();
 
   if (path === "auth/login") {
     const body = await req.json().catch(() => ({}));
     const email = String(body.email ?? "").trim().toLowerCase();
     const password = String(body.password ?? "");
 
-    // Accept admin credentials or any valid email with password >= 6 chars
     if (!email || !password || password.length < 6) {
       return NextResponse.json({ error: "Email ou mot de passe invalide." }, { status: 400 });
     }
@@ -144,6 +226,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       status: "active",
       image: body.image || body.imageUrl || "",
     };
+
+    if (db) {
+      const res = await db.query(
+        "INSERT INTO halls (name, capacity, city, address, price_cents, image) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+        [newHall.name, newHall.capacity, newHall.city, newHall.address, newHall.price_cents, newHall.image]
+      ).catch(() => null);
+      if (res?.rows[0]) return NextResponse.json({ hall: res.rows[0] }, { status: 201 });
+    }
+
     store.halls.unshift(newHall);
     return NextResponse.json({ hall: newHall }, { status: 201 });
   }
@@ -158,6 +249,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       client_type: body.clientType || "Particulier",
       status: "active",
     };
+
+    if (db) {
+      const res = await db.query(
+        "INSERT INTO clients (name, email, phone, company, client_type) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [newClient.name, newClient.email, newClient.phone, newClient.company, newClient.client_type]
+      ).catch(() => null);
+      if (res?.rows[0]) return NextResponse.json({ client: res.rows[0] }, { status: 201 });
+    }
+
     store.clients.unshift(newClient);
     return NextResponse.json({ client: newClient }, { status: 201 });
   }
@@ -171,6 +271,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       price_cents: Number(body.priceCents || 0),
       status: "active",
     };
+
+    if (db) {
+      const res = await db.query(
+        "INSERT INTO services (name, category, provider, price_cents) VALUES ($1, $2, $3, $4) RETURNING *",
+        [newService.name, newService.category, newService.provider, newService.price_cents]
+      ).catch(() => null);
+      if (res?.rows[0]) return NextResponse.json({ service: res.rows[0] }, { status: 201 });
+    }
+
     store.services.unshift(newService);
     return NextResponse.json({ service: newService }, { status: 201 });
   }
@@ -186,6 +295,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       total_cents: Number(body.totalCents || 0),
       status: "confirmed",
     };
+
+    if (db) {
+      const res = await db.query(
+        "INSERT INTO reservations (title, event_type, starts_at, ends_at, guest_count, total_cents) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+        [newRes.title, newRes.event_type, newRes.starts_at, newRes.ends_at, newRes.guest_count, newRes.total_cents]
+      ).catch(() => null);
+      if (res?.rows[0]) return NextResponse.json({ reservation: res.rows[0] }, { status: 201 });
+    }
+
     store.reservations.unshift(newRes);
     return NextResponse.json({ reservation: newRes }, { status: 201 });
   }
@@ -199,6 +317,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       paid_at: body.paidAt || new Date().toISOString(),
       status: "confirmed",
     };
+
+    if (db) {
+      const res = await db.query(
+        "INSERT INTO payments (reference, amount_cents, method, paid_at) VALUES ($1, $2, $3, $4) RETURNING *",
+        [newPay.reference, newPay.amount_cents, newPay.method, newPay.paid_at]
+      ).catch(() => null);
+      if (res?.rows[0]) return NextResponse.json({ payment: res.rows[0] }, { status: 201 });
+    }
+
     store.payments.unshift(newPay);
     return NextResponse.json({ payment: newPay }, { status: 201 });
   }
@@ -211,6 +338,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       status: body.status || "draft",
       created_at: new Date().toISOString(),
     };
+
+    if (db) {
+      const res = await db.query(
+        "INSERT INTO contracts (title, contract_number, status) VALUES ($1, $2, $3) RETURNING *",
+        [newCtr.title, newCtr.contract_number, newCtr.status]
+      ).catch(() => null);
+      if (res?.rows[0]) return NextResponse.json({ contract: res.rows[0] }, { status: 201 });
+    }
+
     store.contracts.unshift(newCtr);
     return NextResponse.json({ contract: newCtr }, { status: 201 });
   }
@@ -224,14 +360,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rou
       role: body.role || "EMPLOYEE",
       status: "active",
     };
+
+    if (db) {
+      const res = await db.query(
+        "INSERT INTO employees (id, name, email, phone, role) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+        [newEmp.id, newEmp.name, newEmp.email, newEmp.phone, newEmp.role]
+      ).catch(() => null);
+      if (res?.rows[0]) return NextResponse.json({ employee: res.rows[0] }, { status: 201 });
+    }
+
     store.employees.unshift(newEmp);
     return NextResponse.json({ employee: newEmp }, { status: 201 });
-  }
-
-  if (path.startsWith("notifications/") && path.endsWith("/read")) {
-    const notifId = Number(route[1]);
-    store.notifications = store.notifications.filter((n) => n.id !== notifId);
-    return new NextResponse(null, { status: 204 });
   }
 
   return NextResponse.json({ success: true }, { status: 201 });
@@ -241,6 +380,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
   const { route } = await params;
   const resource = route[0];
   const id = route[1];
+  const db = getDbPool();
+
+  if (db && ["halls", "clients", "services", "reservations", "payments", "contracts", "employees"].includes(resource)) {
+    await db.query(`DELETE FROM ${resource} WHERE id = $1`, [id]).catch(() => null);
+  }
 
   if (resource === "halls") store.halls = store.halls.filter((item) => String(item.id) !== id);
   if (resource === "clients") store.clients = store.clients.filter((item) => String(item.id) !== id);
