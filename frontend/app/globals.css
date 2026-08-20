@@ -49,6 +49,7 @@ button { cursor: pointer; }
   min-height: 100vh;
   background: var(--paper);
   display: flex;
+  overflow-x: hidden;
 }
 .dashboard-app.dark {
   --ink: #f0f6f2;
@@ -761,11 +762,22 @@ button { cursor: pointer; }
   .sidebar.open { left: 0; }
   .mobile-close, .menu-button { display: block; border: 0; background: transparent; color: var(--muted); }
   .mobile-close { color: white; margin-left: auto; }
+  .global-search { width: auto; flex: 1; min-width: 0; }
+  .global-search kbd { display: none; }
+  .topbar { padding: 0 16px; gap: 10px; }
+  .topbar-actions { gap: 8px; }
+  .top-profile div:nth-child(2) { display: none; }
+  .dashboard-content { padding: 20px 16px 60px; }
+  .module-heading { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .welcome-row { flex-direction: column; gap: 16px; }
+  .welcome-row h1 { font-size: 26px; }
 }
 @media (max-width: 540px) {
-  .dashboard-content { padding: 24px 14px 60px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-content { padding: 18px 12px 60px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .report-grid, .payment-summary { grid-template-columns: 1fr; }
+  .module-title h1 { font-size: 24px; }
+  .modal-box { width: 94vw; max-height: 88vh; margin: auto; }
 }
 
 /* Offline Page */
