@@ -7,7 +7,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
 export function SettingsModule() {
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("FC");
+  const [currency, setCurrency] = useState("USD");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -15,7 +15,7 @@ export function SettingsModule() {
       .then((response) => response.json())
       .then((payload: { data?: { name?: string; currency?: string } }) => {
         setName(payload.data?.name ?? "");
-        setCurrency(payload.data?.currency ?? "FC");
+        setCurrency(payload.data?.currency ?? "USD");
       })
       .catch(() => undefined);
   }, []);
@@ -62,11 +62,8 @@ export function SettingsModule() {
           <label>
             Devise d&apos;exploitation
             <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              <option value="USD">Dollar ($)</option>
               <option value="FC">Franc Congolais (FC)</option>
-              <option value="USD">Dollar US ($)</option>
-              <option value="EUR">Euro (€)</option>
-              <option value="GBP">Livre Sterling (£)</option>
-              <option value="CHF">Franc Suisse (CHF)</option>
             </select>
           </label>
         </div>

@@ -132,11 +132,11 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
               </div>
             </div>
             <div className="form-section">
-              <h3>Tarification (€)</h3>
+              <h3>Tarification ($)</h3>
               <div className="form-grid">
-                <Field label="Tarif standard (€)" name="price" type="number" min="0" step="0.01" placeholder="2500" required />
-                <Field label="Basse saison (€)" name="lowSeasonPrice" type="number" min="0" step="0.01" placeholder="1800" />
-                <Field label="Haute saison (€)" name="highSeasonPrice" type="number" min="0" step="0.01" placeholder="3200" />
+                <Field label="Tarif standard ($)" name="price" type="number" min="0" step="0.01" placeholder="2500" required />
+                <Field label="Basse saison ($)" name="lowSeasonPrice" type="number" min="0" step="0.01" placeholder="1800" />
+                <Field label="Haute saison ($)" name="highSeasonPrice" type="number" min="0" step="0.01" placeholder="3200" />
                 <SelectField label="Statut d'exploitation" name="status" options={["active", "inactive"]} />
               </div>
             </div>
@@ -190,7 +190,7 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
                 <Field label="Fournisseur / Prestataire" name="provider" placeholder="Atelier Végétal" />
                 <Field label="Téléphone prestataire" name="providerPhone" placeholder="01 40 00 00 00" />
                 <Field label="Email prestataire" name="providerEmail" type="email" placeholder="contact@prestataire.fr" />
-                <Field label="Tarif HT (€)" name="price" type="number" min="0" step="0.01" placeholder="850" required />
+                <Field label="Tarif HT ($)" name="price" type="number" min="0" step="0.01" placeholder="850" required />
                 <SelectField label="Type de facturation" name="priceType" options={["Forfait", "Par invité", "Par heure", "Personnalisé"]} />
               </div>
             </div>
@@ -208,7 +208,7 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
                 <Field label="Heure de début" name="startTime" type="time" defaultValue="14:00" required />
                 <Field label="Heure de fin" name="endTime" type="time" defaultValue="02:00" required />
                 <Field label="Nombre d’invités estimé" name="guests" type="number" min="1" placeholder="150" required />
-                <Field label="Montant total convenu (€)" name="total" type="number" min="0" step="0.01" placeholder="6500" required />
+                <Field label="Montant total convenu ($)" name="total" type="number" min="0" step="0.01" placeholder="6500" required />
               </div>
             </div>
           </>
@@ -220,7 +220,7 @@ export function ProfessionalModal({ active, error, saving, onClose, onSubmit }: 
               <h3>Détails de l&apos;encaissement</h3>
               <div className="form-grid">
                 <Field label="Référence ou Libellé" name="reference" placeholder="Acompte réservation #001" required />
-                <Field label="Montant (€)" name="amount" type="number" min="0.01" step="0.01" placeholder="1500" required />
+                <Field label="Montant ($)" name="amount" type="number" min="0.01" step="0.01" placeholder="1500" required />
                 <Field label="Date d'encaissement" name="date" type="date" required />
                 <SelectField label="Moyen de paiement" name="method" options={["Virement bancaire", "Carte bancaire", "Espèces", "Chèque", "Autre"]} required />
               </div>

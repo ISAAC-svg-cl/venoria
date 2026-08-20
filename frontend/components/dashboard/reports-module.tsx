@@ -16,7 +16,7 @@ type SummaryData = {
 
 export function ReportsModule() {
   const [summary, setSummary] = useState<SummaryData | null>(null);
-  const [currency, setCurrencyState] = useState<CurrencyCode>("FC");
+  const [currency, setCurrencyState] = useState<CurrencyCode>("USD");
   const [error, setError] = useState(false);
 
   useEffect(() => {

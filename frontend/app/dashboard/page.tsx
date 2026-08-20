@@ -10,6 +10,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { ModuleView } from "@/components/dashboard/module-view";
 import { ProfessionalModal } from "@/components/dashboard/professional-modal";
 import type { RecordItem, Section, StatItem } from "@/components/dashboard/types";
+import { formatAmount, type CurrencyCode } from "@/lib/currency";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const [modalError, setModalError] = useState("");
   const [currentUser, setCurrentUser] = useState<{ name: string; role: string } | null>(null);
   const [summaryData, setSummaryData] = useState<{ revenue_cents: string; reservations: string; clients: string; halls: string } | null>(null);
+  const [currency, setCurrency] = useState<CurrencyCode>("USD");
 
   useEffect(() => {
     fetch(`${apiUrl}/api/auth/me`, { credentials: "include" })
@@ -56,6 +58,13 @@ export default function DashboardPage() {
     fetch(`${apiUrl}/api/reports/summary`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : Promise.reject()))
       .then((res) => setSummaryData(res.summary))
+      .catch(() => undefined);
+
+    fetch(`${apiUrl}/api/settings`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((payload: { data?: { currency?: string } }) => {
+        if (payload.data?.currency) setCurrency(payload.data.currency as CurrencyCode);
+      })
       .catch(() => undefined);
 
     if ("serviceWorker" in navigator) {
@@ -86,7 +95,8 @@ export default function DashboardPage() {
           payload.halls?.map((item) => ({
             id: item.id,
             title: item.name,
-            detail: `${item.capacity} pers. · ${item.city ? `${item.city} · ` : ""}${(item.price_cents / 100).toLocaleString("fr-FR")} €`,
+            detail: `${item.capacity} pers. · ${item.city ? `${item.city} · ` : ""}${formatAmount(item.price_cents, currency)}`,
+
             status: item.status === "active" ? "Disponible" : "Indisponible",
           })) ??
           payload.clients?.map((item) => ({
@@ -98,19 +108,22 @@ export default function DashboardPage() {
           payload.services?.map((item) => ({
             id: item.id,
             title: item.name,
-            detail: `${item.category} · ${(item.price_cents / 100).toLocaleString("fr-FR")} € · ${item.provider || "Interne"}`,
+            detail: `${item.category} · ${formatAmount(item.price_cents, currency)} · ${item.provider || "Interne"}`,
+
             status: item.status === "active" ? "Disponible" : "Indisponible",
           })) ??
           payload.reservations?.map((item) => ({
             id: item.id,
             title: item.title,
-            detail: `${item.event_type ? `${item.event_type} · ` : ""}${new Date(item.starts_at).toLocaleDateString("fr-FR")} · ${item.guest_count} invités · ${(item.total_cents / 100).toLocaleString("fr-FR")} €`,
+            detail: `${item.event_type ? `${item.event_type} · ` : ""}${new Date(item.starts_at).toLocaleDateString("fr-FR")} · ${item.guest_count} invités · ${formatAmount(item.total_cents, currency)}`,
+
             status: item.status,
           })) ??
           payload.payments?.map((item) => ({
             id: item.id,
             title: item.reference || "Paiement sans référence",
-            detail: `${(item.amount_cents / 100).toLocaleString("fr-FR")} € · ${item.method} · ${new Date(item.paid_at).toLocaleDateString("fr-FR")}`,
+            detail: `${formatAmount(item.amount_cents, currency)} · ${item.method} · ${new Date(item.paid_at).toLocaleDateString("fr-FR")}`,
+
             status: item.status,
           })) ??
           payload.contracts?.map((item) => ({
@@ -304,7 +317,7 @@ export default function DashboardPage() {
 
   const dynamicStats: StatItem[] = [
     ["Réservations actives", summaryData?.reservations ?? "0", CalendarDays, "green"],
-    ["Chiffre d'affaires", summaryData ? `${(Number(summaryData.revenue_cents) / 100).toLocaleString("fr-FR")} €` : "0 €", WalletCards, "gold"],
+    ["Chiffre d'affaires", summaryData ? formatAmount(Number(summaryData.revenue_cents), currency) : formatAmount(0, currency), WalletCards, "gold"],
     ["Clients suivis", summaryData?.clients ?? "0", Users, "blue"],
     ["Salles configurées", summaryData?.halls ?? "0", Home, "green"],
     ["Taux d’activité", summaryData && Number(summaryData.reservations) > 0 ? "88 %" : "0 %", Zap, "gold"],
