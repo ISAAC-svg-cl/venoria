@@ -4,37 +4,20 @@ import { SignJWT, jwtVerify } from "jose";
 const secret = new TextEncoder().encode(process.env.JWT_SECRET ?? "venoria-secret-key-2026");
 
 // In-memory data store for serverless demo & live preview
+// Clean store without demonstration data
 const store = {
-  halls: [
-    { id: 1, name: "Le Jardin d’Opale", capacity: 250, city: "Chantilly", address: "12 route des Châteaux", price_cents: 350000, status: "active", image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&auto=format&fit=crop&q=80" },
-    { id: 2, name: "Le Grand Salon Vénitien", capacity: 180, city: "Paris", address: "8 place Vendôme", price_cents: 480000, status: "active", image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80" },
-  ],
-  clients: [
-    { id: 1, name: "Sophie & Marc Martin", email: "sophie.martin@email.com", phone: "06 12 34 56 78", company: "Particulier", client_type: "Particulier", status: "active" },
-    { id: 2, name: "Maison Laurent & Co", email: "contact@laurent-events.fr", phone: "01 45 67 89 00", company: "Agence Laurent", client_type: "Entreprise", status: "active" },
-  ],
-  services: [
-    { id: 1, name: "Décoration Florale Prestige", category: "Décoration", provider: "Atelier Végétal", price_cents: 120000, status: "active" },
-    { id: 2, name: "Service Traiteur Gastronomique", category: "Restauration", provider: "Chef Étoilé Réception", price_cents: 850000, status: "active" },
-  ],
-  reservations: [
-    { id: 1, title: "Mariage Sophie & Marc", event_type: "Mariage", starts_at: new Date(Date.now() + 86400000 * 5).toISOString(), ends_at: new Date(Date.now() + 86400000 * 5 + 3600000 * 12).toISOString(), guest_count: 140, total_cents: 650000, status: "confirmed" },
-  ],
-  payments: [
-    { id: 1, reference: "Acompte Réservation #001", amount_cents: 250000, method: "Virement bancaire", paid_at: new Date().toISOString(), status: "confirmed" },
-  ],
-  contracts: [
-    { id: 1, title: "Contrat de Mise à Disposition - Mariage Martin", contract_number: "CTR-2026-001", status: "signed", created_at: new Date().toISOString() },
-  ],
+  halls: [] as Array<{ id: number; name: string; capacity: number; city: string; address: string; price_cents: number; status: string; image?: string }>,
+  clients: [] as Array<{ id: number; name: string; email: string; phone: string; company: string; client_type: string; status: string }>,
+  services: [] as Array<{ id: number; name: string; category: string; provider: string; price_cents: number; status: string }>,
+  reservations: [] as Array<{ id: number; title: string; event_type: string; starts_at: string; ends_at: string; guest_count: number; total_cents: number; status: string }>,
+  payments: [] as Array<{ id: number; reference: string; amount_cents: number; method: string; paid_at: string; status: string }>,
+  contracts: [] as Array<{ id: number; title: string; contract_number: string; status: string; created_at: string }>,
   employees: [
-    { id: "e1-uuid", name: "Administrateur", email: "admin@venoria.fr", phone: "06 98 76 54 32", role: "Administrateur", status: "active" },
-    { id: "e2-uuid", name: "Léa Bernard", email: "lea.bernard@venoria.fr", phone: "06 11 22 33 44", role: "MANAGER", status: "active" },
+    { id: "e1-uuid", name: "Administrateur", email: "admin@venoria.fr", phone: "", role: "Administrateur", status: "active" },
   ],
-  notifications: [
-    { id: 1, title: "Bienvenue sur Venoria", detail: "Votre espace de gestion événementielle est opérationnel.", read_at: null },
-  ],
+  notifications: [] as Array<{ id: number; title: string; detail: string; read_at: string | null }>,
   settings: {
-    name: "VENORIA Prestige & Domaines",
+    name: "VENORIA",
     currency: "USD",
   },
 };

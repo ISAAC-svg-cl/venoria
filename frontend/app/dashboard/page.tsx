@@ -323,7 +323,7 @@ export default function DashboardPage() {
     ["Clients suivis", summaryData?.clients ?? "0", Users, "blue"],
     ["Salles configurées", summaryData?.halls ?? "0", Home, "green"],
     ["Taux d’activité", summaryData && Number(summaryData.reservations) > 0 ? "88 %" : "0 %", Zap, "gold"],
-    ["Soldes sécurisés", "100 %", WalletCards, "green"],
+    ["Soldes sécurisés", summaryData && Number(summaryData.reservations) > 0 ? "100 %" : "0 %", WalletCards, "green"],
   ];
 
   return (
