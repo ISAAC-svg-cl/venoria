@@ -343,7 +343,7 @@ export default function DashboardPage() {
                     <Sparkles size={15} /> ESPACE DE GESTION PRÊT
                   </p>
                   <h1>
-                    Bonjour {currentUser?.name?.split(" ")[0] ?? "Administrateur"}, bienvenue <span>👋</span>
+                    Bonjour Admin
                   </h1>
                   <p className="welcome-copy">
                     Pilotez vos réceptions, vos disponibilités et votre chiffre d&apos;affaires en toute sérénité.
