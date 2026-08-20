@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CalendarDays, ChevronLeft, ChevronRight, Clock, Plus, Users } from "lucide-react";
+import { AlertTriangle, Calendar as CalendarIcon, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock, Filter, Layers, List, MapPin, Plus, Sparkles, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { RecordItem } from "./types";
 
@@ -10,8 +10,13 @@ interface CalendarModuleProps {
   onDelete: (id: string | number) => void;
 }
 
+type ViewMode = "month" | "week" | "agenda";
+
 export function CalendarModule({ records, onAdd }: CalendarModuleProps) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [selectedDay, setSelectedDay] = useState<number | null>(() => new Date().getDate());
+  const [filterType, setFilterType] = useState<string>("all");
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -23,24 +28,35 @@ export function CalendarModule({ records, onAdd }: CalendarModuleProps) {
 
   function nextMonth() {
     setCurrentDate(new Date(year, month + 1, 1));
+    setSelectedDay(null);
   }
 
   function prevMonth() {
     setCurrentDate(new Date(year, month - 1, 1));
+    setSelectedDay(null);
   }
 
   function today() {
-    setCurrentDate(new Date());
+    const now = new Date();
+    setCurrentDate(now);
+    setSelectedDay(now.getDate());
   }
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Monday = 0
 
-  // Conflict detection: detect if there are multiple bookings on same day
+  const isCurrentMonthToday = new Date().getMonth() === month && new Date().getFullYear() === year;
+  const todayDateNum = new Date().getDate();
+
+  // Parse records into dates
   const eventsByDay = useMemo(() => {
     const map: Record<number, RecordItem[]> = {};
     records.forEach((record) => {
-      // Extract date if present in detail
+      // Filter by type if active
+      if (filterType !== "all" && !record.title.toLowerCase().includes(filterType.toLowerCase()) && !record.detail.toLowerCase().includes(filterType.toLowerCase())) {
+        return;
+      }
+
       const match = record.detail.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
       if (match) {
         const d = parseInt(match[1], 10);
@@ -51,210 +67,275 @@ export function CalendarModule({ records, onAdd }: CalendarModuleProps) {
           map[d].push(record);
         }
       } else {
-        // Distribute or fallback to day 1-28 for demo/unformatted items
         const d = (typeof record.id === "number" ? record.id : 1) % daysInMonth + 1;
         if (!map[d]) map[d] = [];
         map[d].push(record);
       }
     });
     return map;
-  }, [records, month, year, daysInMonth]);
+  }, [records, month, year, daysInMonth, filterType]);
 
   const conflicts = useMemo(() => {
-    const list: Array<{ day: number; count: number }> = [];
+    const list: Array<{ day: number; count: number; events: RecordItem[] }> = [];
     Object.entries(eventsByDay).forEach(([dayStr, evts]) => {
       if (evts.length > 1) {
-        list.push({ day: parseInt(dayStr, 10), count: evts.length });
+        list.push({ day: parseInt(dayStr, 10), count: evts.length, events: evts });
       }
     });
     return list;
   }, [eventsByDay]);
 
+  const totalEventsThisMonth = useMemo(() => {
+    return Object.values(eventsByDay).reduce((acc, curr) => acc + curr.length, 0);
+  }, [eventsByDay]);
+
+  const selectedDayEvents = selectedDay ? eventsByDay[selectedDay] ?? [] : [];
+
   return (
-    <section className="module-view calendar-module">
-      <div className="module-heading">
-        <div>
-          <div className="module-title">
+    <section className="calendar-view">
+      {/* Header with Title and Actions */}
+      <div className="calendar-top-bar">
+        <div className="calendar-title-wrap">
+          <div className="calendar-icon-badge">
             <CalendarDays size={22} />
-            <h1>Planning &amp; Calendrier des Salles</h1>
           </div>
-          <p>Supervisez les disponibilités, les réceptions en cours et détectez les conflits de dates.</p>
+          <div>
+            <h1>Planning &amp; Calendrier Interactif</h1>
+            <p>Supervisez l&apos;occupation des salles, gérez les dates de réception et détectez les chevauchements.</p>
+          </div>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button className="secondary-button" onClick={today}>
+
+        <div className="calendar-actions-wrap">
+          <div className="view-mode-selector">
+            <button
+              type="button"
+              className={viewMode === "month" ? "active" : ""}
+              onClick={() => setViewMode("month")}
+            >
+              <CalendarIcon size={14} /> Mois
+            </button>
+            <button
+              type="button"
+              className={viewMode === "agenda" ? "active" : ""}
+              onClick={() => setViewMode("agenda")}
+            >
+              <List size={14} /> Agenda
+            </button>
+          </div>
+
+          <button type="button" className="secondary-button today-btn" onClick={today}>
             Aujourd&apos;hui
           </button>
-          <button className="primary-button" onClick={onAdd}>
-            <Plus size={17} /> Réserver une date
+
+          <button type="button" className="primary-button add-date-btn" onClick={onAdd}>
+            <Plus size={16} /> Réserver une date
           </button>
         </div>
       </div>
 
+      {/* KPI Stats Bar */}
+      <div className="calendar-stats-row">
+        <div className="cal-stat-card">
+          <div className="cal-stat-icon gold"><Sparkles size={18} /></div>
+          <div>
+            <strong>{totalEventsThisMonth}</strong>
+            <span>Événement(s) en {monthNames[month]}</span>
+          </div>
+        </div>
+        <div className="cal-stat-card">
+          <div className="cal-stat-icon green"><CheckCircle2 size={18} /></div>
+          <div>
+            <strong>{daysInMonth - Object.keys(eventsByDay).length}</strong>
+            <span>Jours entièrement disponibles</span>
+          </div>
+        </div>
+        <div className="cal-stat-card">
+          <div className={`cal-stat-icon ${conflicts.length > 0 ? "rose" : "blue"}`}>
+            <AlertTriangle size={18} />
+          </div>
+          <div>
+            <strong>{conflicts.length}</strong>
+            <span>{conflicts.length > 0 ? "Conflit(s) à vérifier" : "Aucun chevauchement"}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Conflicts Alert Banner if any */}
       {conflicts.length > 0 && (
-        <div style={{
-          background: "rgba(225, 29, 72, 0.15)",
-          border: "1px solid rgba(225, 29, 72, 0.4)",
-          borderRadius: "10px",
-          padding: "12px 16px",
-          marginBottom: "16px",
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          color: "#fda4af"
-        }}>
-          <AlertTriangle size={18} />
-          <span>
-            <strong>Attention : {conflicts.length} chevauchement(s) détecté(s)</strong> ce mois-ci (jours : {conflicts.map(c => `${c.day} ${monthNames[month]}`).join(", ")}). Vérifiez la disponibilité des salles.
-          </span>
+        <div className="calendar-conflict-banner" role="alert">
+          <AlertTriangle size={20} className="conflict-icon" />
+          <div style={{ flex: 1 }}>
+            <strong>Attention : {conflicts.length} date(s) avec réservations multiples</strong>
+            <p>
+              Les jours suivants comptent plus d&apos;un événement : {conflicts.map((c) => `${c.day} ${monthNames[month]} (${c.count} réservations)`).join(", ")}.
+            </p>
+          </div>
         </div>
       )}
 
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "16px",
-        background: "rgba(20, 44, 38, 0.3)",
-        padding: "10px 16px",
-        borderRadius: "12px",
-        border: "1px solid rgba(212, 175, 55, 0.2)"
-      }}>
-        <h2 style={{ margin: 0, fontSize: "17px", color: "var(--gold, #d4af37)" }}>
-          {monthNames[month]} {year}
-        </h2>
-        <div style={{ display: "flex", gap: "6px" }}>
-          <button className="icon-button" onClick={prevMonth} aria-label="Mois précédent">
-            <ChevronLeft size={18} />
+      {/* Month Navigation & Filters */}
+      <div className="calendar-nav-bar">
+        <div className="month-navigator">
+          <button type="button" className="icon-button nav-arrow" onClick={prevMonth} aria-label="Mois précédent">
+            <ChevronLeft size={20} />
           </button>
-          <button className="icon-button" onClick={nextMonth} aria-label="Mois suivant">
-            <ChevronRight size={18} />
+          <h2>{monthNames[month]} <span style={{ opacity: 0.75 }}>{year}</span></h2>
+          <button type="button" className="icon-button nav-arrow" onClick={nextMonth} aria-label="Mois suivant">
+            <ChevronRight size={20} />
           </button>
+        </div>
+
+        {/* Filter Pills */}
+        <div className="calendar-filter-pills">
+          <span className="filter-label"><Filter size={13} /> Filtrer :</span>
+          {["all", "Mariage", "Gala", "Anniversaire", "Séminaire"].map((type) => (
+            <button
+              key={type}
+              type="button"
+              className={`filter-pill ${filterType === type ? "active" : ""}`}
+              onClick={() => setFilterType(type)}
+            >
+              {type === "all" ? "Tous les événements" : type}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(7, 1fr)",
-        gap: "8px",
-        marginBottom: "16px"
-      }}>
-        {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
-          <div key={d} style={{
-            textAlign: "center",
-            fontWeight: "700",
-            fontSize: "12px",
-            opacity: 0.7,
-            padding: "6px 0"
-          }}>
-            {d}
-          </div>
-        ))}
-
-        {Array.from({ length: firstDayIndex }).map((_, i) => (
-          <div key={`empty-${i}`} style={{
-            minHeight: "85px",
-            background: "rgba(0,0,0,0.1)",
-            borderRadius: "8px",
-            opacity: 0.3
-          }} />
-        ))}
-
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const day = i + 1;
-          const dayEvents = eventsByDay[day] ?? [];
-          const isConflict = dayEvents.length > 1;
-
-          return (
-            <div
-              key={`day-${day}`}
-              style={{
-                minHeight: "95px",
-                background: isConflict
-                  ? "rgba(225, 29, 72, 0.1)"
-                  : dayEvents.length > 0
-                  ? "rgba(20, 44, 38, 0.5)"
-                  : "rgba(255, 255, 255, 0.03)",
-                border: isConflict
-                  ? "1px solid rgba(225, 29, 72, 0.5)"
-                  : dayEvents.length > 0
-                  ? "1px solid rgba(212, 175, 55, 0.4)"
-                  : "1px solid rgba(255, 255, 255, 0.07)",
-                borderRadius: "10px",
-                padding: "8px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "4px",
-                transition: "all 0.2s"
-              }}
-            >
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <span style={{
-                  fontWeight: "700",
-                  fontSize: "12px",
-                  color: dayEvents.length > 0 ? "var(--gold, #d4af37)" : "inherit"
-                }}>
-                  {day}
-                </span>
-                {isConflict && (
-                  <span title="Conflit de date" style={{ color: "#f43f5e", fontSize: "11px" }}>
-                    <AlertTriangle size={13} />
-                  </span>
-                )}
+      {/* Main Grid View */}
+      {viewMode === "month" && (
+        <div className="calendar-grid-container">
+          <div className="calendar-weekdays-header">
+            {["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"].map((dayName) => (
+              <div key={dayName} className="weekday-col">
+                <span className="weekday-long">{dayName}</span>
+                <span className="weekday-short">{dayName.slice(0, 3)}</span>
               </div>
+            ))}
+          </div>
 
-              {dayEvents.map((evt) => (
+          <div className="calendar-days-grid">
+            {/* Empty slots for month start */}
+            {Array.from({ length: firstDayIndex }).map((_, i) => (
+              <div key={`empty-${i}`} className="calendar-day-cell empty" />
+            ))}
+
+            {/* Days in Month */}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const dayEvents = eventsByDay[day] ?? [];
+              const isConflict = dayEvents.length > 1;
+              const isToday = isCurrentMonthToday && todayDateNum === day;
+              const isSelected = selectedDay === day;
+
+              return (
                 <div
-                  key={evt.id}
-                  style={{
-                    background: "rgba(212, 175, 55, 0.15)",
-                    borderLeft: "3px solid var(--gold, #d4af37)",
-                    borderRadius: "4px",
-                    padding: "3px 6px",
-                    fontSize: "10px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap"
-                  }}
-                  title={`${evt.title} · ${evt.detail}`}
+                  key={`day-${day}`}
+                  className={`calendar-day-cell ${dayEvents.length > 0 ? "has-events" : ""} ${isConflict ? "conflict" : ""} ${isToday ? "today" : ""} ${isSelected ? "selected" : ""}`}
+                  onClick={() => setSelectedDay(day)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Jour ${day} ${monthNames[month]} - ${dayEvents.length} événements`}
                 >
-                  <strong>{evt.title}</strong>
+                  <div className="day-header">
+                    <span className={`day-number ${isToday ? "today-badge" : ""}`}>{day}</span>
+                    {isConflict && (
+                      <span className="conflict-badge" title="Double réservation détectée">
+                        <AlertTriangle size={11} /> {dayEvents.length}
+                      </span>
+                    )}
+                    {!isConflict && dayEvents.length > 0 && (
+                      <span className="event-count-dot">{dayEvents.length}</span>
+                    )}
+                  </div>
+
+                  <div className="day-events-list">
+                    {dayEvents.slice(0, 2).map((evt) => (
+                      <div key={evt.id} className="calendar-event-tag" title={evt.title}>
+                        <span className="event-tag-title">{evt.title}</span>
+                      </div>
+                    ))}
+                    {dayEvents.length > 2 && (
+                      <span className="event-more-tag">+{dayEvents.length - 2} autres</span>
+                    )}
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Selected Day Details Panel */}
+      {viewMode === "month" && selectedDay && (
+        <div className="selected-day-panel">
+          <div className="selected-day-header">
+            <div>
+              <h3>
+                {selectedDay} {monthNames[month]} {year}
+              </h3>
+              <span>
+                {selectedDayEvents.length === 0
+                  ? "Aucun événement programmé ce jour — Salle disponible"
+                  : `${selectedDayEvents.length} événement(s) enregistré(s)`}
+              </span>
+            </div>
+            <button type="button" className="primary-button" onClick={onAdd}>
+              <Plus size={15} /> Réserver pour le {selectedDay} {monthNames[month]}
+            </button>
+          </div>
+
+          {selectedDayEvents.length > 0 && (
+            <div className="selected-day-events-grid">
+              {selectedDayEvents.map((evt) => (
+                <article key={evt.id} className="event-detail-card">
+                  <div className="event-detail-top">
+                    <strong>{evt.title}</strong>
+                    <span className={`status ${evt.status === "confirmed" ? "status-confirmée" : "status-annulée"}`}>
+                      {evt.status}
+                    </span>
+                  </div>
+                  <p className="event-detail-desc">{evt.detail}</p>
+                  <div className="event-detail-meta">
+                    <span><Clock size={13} /> Horaires &amp; Créneau confirmés</span>
+                    <span><Users size={13} /> Invités enregistrés</span>
+                  </div>
+                </article>
               ))}
             </div>
-          );
-        })}
-      </div>
-
-      {records.length === 0 ? (
-        <div className="module-empty">
-          <CalendarDays size={28} />
-          <h2>Aucun événement planifié</h2>
-          <p>Réservez une salle ou ajoutez un événement pour l&apos;afficher sur le calendrier.</p>
-          <button className="primary-button" onClick={onAdd}>
-            <Plus size={17} /> Planifier un événement
-          </button>
+          )}
         </div>
-      ) : (
-        <div className="record-list">
-          <h3 style={{ fontSize: "14px", margin: "16px 0 8px 0" }}>Liste des réservations du calendrier</h3>
-          {records.map((record) => (
-            <article className="record-row" key={record.id}>
-              <div className="record-thumbnail-fallback">
-                <Clock size={20} />
-              </div>
-              <div className="record-row-main">
-                <strong>{record.title}</strong>
-                <span>{record.detail}</span>
-              </div>
-              <span className={`status ${record.status === "confirmed" ? "status-confirmée" : "status-annulée"}`}>
-                {record.status}
-              </span>
-            </article>
-          ))}
+      )}
+
+      {/* Agenda / List View */}
+      {viewMode === "agenda" && (
+        <div className="calendar-agenda-view">
+          {records.length === 0 ? (
+            <div className="module-empty">
+              <CalendarDays size={32} />
+              <h2>Aucune réservation dans l&apos;agenda</h2>
+              <p>Votre planning est actuellement libre. Ajoutez votre premier événement pour commencer.</p>
+              <button className="primary-button" onClick={onAdd}>
+                <Plus size={16} /> Planifier un événement
+              </button>
+            </div>
+          ) : (
+            <div className="agenda-list">
+              {records.map((record) => (
+                <article className="agenda-row" key={record.id}>
+                  <div className="agenda-date-badge">
+                    <CalendarDays size={18} />
+                  </div>
+                  <div className="agenda-main">
+                    <strong>{record.title}</strong>
+                    <span>{record.detail}</span>
+                  </div>
+                  <span className={`status ${record.status === "confirmed" ? "status-confirmée" : "status-annulée"}`}>
+                    {record.status}
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </section>
